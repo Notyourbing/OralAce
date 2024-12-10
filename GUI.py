@@ -10,6 +10,7 @@ import threading
 from qfluentwidgets import ComboBox
 import random
 from openai import OpenAI
+import keyboard
 
 client = OpenAI(
     api_key="sk-Jqjsjxuap8LEKcROc7iTbiZ2B93Vs9bNdrAMw8u3dyxltimg",
@@ -17,11 +18,12 @@ client = OpenAI(
 )
 
 scene_set = ["Daily life", "Shopping", "Education", "Social life", "Traveling abroad"]
-scene_dl = ["ordeing in a cantee", "tidying the house", "hailing a taxi", "asking for the way"]
-scene_sh = ["shopping at a sports shop", "buying some fruits", "asking for after-sales service"]
-scene_ed = ["talking about tommorrow's math test", "asking information for your offers"]
-scene_sl = ["making a new friend", "planning a trip with friends"]
-scene_ta = ["booking a hotel", "checking in at the airport"]
+scene_daily_life = ["ordeing in a cantee", "tidying the house", "hailing a taxi", "asking for the way"]
+scene_shopping = ["shopping at a sports shop", "buying some fruits", "asking for after-sales service"]
+scene_education = ["talking about tommorrow's math test", "asking information for your offers"]
+scene_social_life = ["making a new friend", "planning a trip with friends"]
+scene_traveling_abroad = ["booking a hotel", "checking in at the airport"]
+
 
 class ChatApp(QtWidgets.QWidget):
     def __init__(self):
@@ -35,7 +37,7 @@ class ChatApp(QtWidgets.QWidget):
 
         # 设置背景
         palette = QPalette()
-        pixmap = QPixmap('bg.jpg').scaled(2700, 1600)
+        pixmap = QPixmap('image/background.jpg').scaled(2700, 1600)
         transparent_pixmap = QPixmap(pixmap.size())
         transparent_pixmap.fill(QColor(255, 255, 255, 255))
         painter = QPainter(transparent_pixmap)
@@ -47,11 +49,11 @@ class ChatApp(QtWidgets.QWidget):
         self.setPalette(palette)
 
         # 设置icon
-        icon = QtGui.QIcon("icon.png")
+        icon = QtGui.QIcon("image/icon.png")
         self.setWindowIcon(icon)
 
         # 设置背景色和默认字体颜色
-        #self.setStyleSheet("background-color: #f7f9fc; color: #2c3e50;")
+        # layout.addWidget(widget, row, column, row_span, column_span, alignment) 函数参数
         self.setStyleSheet("color: #2c3e50;")
 
         # 设置全局字体大小
@@ -77,8 +79,15 @@ class ChatApp(QtWidgets.QWidget):
         self.scene_vlayout = QtWidgets.QVBoxLayout()
         self.scene_vlayout.setSpacing(10)
 
-        self.instruction_label = QtWidgets.QLabel(
-            "Instructions: Please choose a scene set to get a random scene in that set. When you get ready, press the 'Start Practice' button at the bottom of the page. After your AI partner begin the conversation, you can talk with her after pressing 'S' on your keyboard. When you finish talking, you can press 'Q' on your keyboard to end and wait for your partner's response. If you want to end this conversation, just speak the single word 'close'.")
+        # 指导说明标签
+        instruction_text = (
+            "Instructions: Please choose a scene set to get a random scene in that set. "
+            "When you get ready, press the 'Start Practice' button at the bottom of the page. "
+            "After your AI partner begins the conversation, you can talk with her after pressing 'S' on your keyboard. "
+            "When you finish talking, you can press 'Q' on your keyboard to end and wait for your partner's response. "
+            "If you want to end this conversation, just speak the single word 'close'."
+        )
+        self.instruction_label = QtWidgets.QLabel(instruction_text)
         self.instruction_label.setWordWrap(True)
         instruction_font = QtGui.QFont("Comic Sans MS", 11)
         self.instruction_label.setFont(instruction_font)
@@ -97,7 +106,7 @@ class ChatApp(QtWidgets.QWidget):
 
         # 添加图片
         self.picture_button = QPushButton(self)
-        self.picture_button.setIcon(QIcon(QPixmap('q_m.jpg')))
+        self.picture_button.setIcon(QIcon(QPixmap('image/q_m.jpg')))
         self.picture_button.setIconSize(QSize(450, 275))
         self.picture_button.setFixedSize(450, 275)
         self.scene_vlayout.addWidget(self.picture_button, alignment=QtCore.Qt.AlignCenter)
@@ -108,7 +117,7 @@ class ChatApp(QtWidgets.QWidget):
         # Start Practice按钮
         self.start_button = QtWidgets.QPushButton("Start Practice")
         self.start_button.setFont(QtGui.QFont("Georgia", 16, QtGui.QFont.Bold))
-        self.start_button.setIcon(QIcon(QPixmap('play.png')))
+        self.start_button.setIcon(QIcon(QPixmap('image/play.png')))
         self.start_button.setIconSize(QSize(30, 30))
         self.start_button.setStyleSheet("""
             QPushButton {
@@ -126,7 +135,31 @@ class ChatApp(QtWidgets.QWidget):
         self.start_button.setFixedSize(280, 60)
         self.start_button.clicked.connect(self.start_practice)
         self.scene_vlayout.addWidget(self.start_button, alignment=QtCore.Qt.AlignCenter)
-        # self.layout.addWidget(self.start_button, 3, 0, alignment=QtCore.Qt.AlignCenter)
+
+        # 退出对话按钮
+        self.exit_button = self.exit_button = QtWidgets.QPushButton("End Conversation")
+        self.exit_button.setFont(QtGui.QFont("Georgia", 16, QtGui.QFont.Bold))
+        self.exit_button.setIcon(QIcon(QPixmap('image/exit.png')))
+        self.exit_button.setIconSize(QSize(30, 30))
+        self.exit_button.setStyleSheet("""
+            QPushButton {
+                background-color: #e74c3c;
+                color: #FFFFFF;
+                border-radius: 20px;
+            }
+            QPushButton:hover {
+                background-color: #c0392b;
+            }
+            QPushButton:pressed {
+                background-color: #992d22;
+            }
+        """)
+        self.exit_button.setFixedSize(280, 60)
+        self.exit_button.setEnabled(False)  # 默认禁用
+        self.exit_button.clicked.connect(self.end_conversation)
+
+        # 将exit_button添加到布局中
+        self.scene_vlayout.addWidget(self.exit_button, alignment=QtCore.Qt.AlignCenter)
 
         # 聊天显示框
         self.chat_display = QtWidgets.QTextEdit()
@@ -147,6 +180,32 @@ class ChatApp(QtWidgets.QWidget):
         self.layout.setColumnMinimumWidth(0, 300)  # 第一列最小宽度
 
         self.setLayout(self.layout)
+
+        # 在initUI()中添加图片按钮
+        self.quit_button = QtWidgets.QPushButton("")
+        self.quit_button.setStyleSheet("""
+            QPushButton {
+                border: none;  /* 移除边框 */
+                background: transparent; /* 背景透明 */
+                border-radius: 20px;  /* 半径为宽度和高度的一半，形成圆形 */
+            }
+            QPushButton:hover {
+                background: rgba(255, 0, 0, 0.2); /* 鼠标悬停时加轻微红色背景 */
+            }
+            QPushButton:pressed {
+                background: rgba(255, 0, 0, 0.5); /* 按下时加深红色背景 */
+            }
+        """)
+        self.quit_button.setFixedSize(40, 40)  # 按钮大小与图片大小一致
+        self.quit_button.setIcon(QIcon("image/close_button.png"))  # 设置图片为按钮图标
+        self.quit_button.setIconSize(QSize(40, 40))  # 图标大小等于按钮大小
+        self.quit_button.clicked.connect(self.close)  # 点击按钮退出程序
+
+        # 添加到布局（左上角）
+        self.layout.addWidget(self.quit_button, 0, 0, 1, 1, QtCore.Qt.AlignLeft)
+
+        # 添加到布局（左上角）
+        self.layout.addWidget(self.quit_button, 0, 0, 1, 1, QtCore.Qt.AlignLeft)
 
     def message_to_str(self):
         # 将消息列表转换为字符串
@@ -172,27 +231,28 @@ class ChatApp(QtWidgets.QWidget):
 
     def run_practice(self):
         self.start_button.setEnabled(False)
+        self.exit_button.setEnabled(True)
         c_scene_set = self.scene_combobox.currentText()
         if (c_scene_set == "Daily life"):
-            self.picture_button.setIcon(QIcon(QPixmap('dl.jpg')))
+            self.picture_button.setIcon(QIcon(QPixmap('image/dl.jpg')))
             self.picture_button.setIconSize(QSize(450, 275))
-            scene=random.choice(scene_dl)
+            scene=random.choice(scene_daily_life)
         elif (c_scene_set == "Shopping"):
-            self.picture_button.setIcon(QIcon(QPixmap('sh.jpg')))
+            self.picture_button.setIcon(QIcon(QPixmap('image/sh.jpg')))
             self.picture_button.setIconSize(QSize(450, 275))
-            scene=random.choice(scene_sh)
+            scene=random.choice(scene_shopping)
         elif (c_scene_set == "Education"):
-            self.picture_button.setIcon(QIcon(QPixmap('ed.jpg')))
+            self.picture_button.setIcon(QIcon(QPixmap('image/ed.jpg')))
             self.picture_button.setIconSize(QSize(450, 275))
-            scene=random.choice(scene_ed)
+            scene=random.choice(scene_education)
         elif (c_scene_set == 'Social life'):
-            self.picture_button.setIcon(QIcon(QPixmap('sl.jpg')))
+            self.picture_button.setIcon(QIcon(QPixmap('image/sl.jpg')))
             self.picture_button.setIconSize(QSize(450, 275))
-            scene=random.choice(scene_sl)
+            scene=random.choice(scene_social_life)
         elif (c_scene_set == 'Traveling abroad'):
-            self.picture_button.setIcon(QIcon(QPixmap('ta.jpg')))
+            self.picture_button.setIcon(QIcon(QPixmap('image/ta.jpg')))
             self.picture_button.setIconSize(QSize(450, 275))
-            scene=random.choice(scene_ta)
+            scene=random.choice(scene_traveling_abroad)
 
         self.chat_display.append(f"Scene:{scene}")
 
@@ -217,26 +277,31 @@ class ChatApp(QtWidgets.QWidget):
         self.update_chat_display("Partner", response)
         text_to_speech(response)
 
-        while True:
-            user_input = speech_to_text()
-            if user_input:
-                # self.input_field.append(f"You:{user_input}")
-                self.chat_display.append(f"You:{user_input}")
-            if user_input == "close":
+        self.running = True  # 控制对话循环
+        while self.running:
+            print("请按下 'S键' 开始说话，并在完成时再次按下 'Q键' 停止录音。")
+            while self.running:
+                if keyboard.is_pressed('s'):
+                    user_input = speech_to_text()
+                    break
+            if not self.running:  # 检查是否已终止对话
                 break
+            if user_input:
+                self.chat_display.append(f"You:{user_input}")
+
             reply = self.create_reply(user_input)
-            self.update_chat_display("Partner", reply)
             text_to_speech(reply)
+            self.update_chat_display("Partner", reply)
+
 
         messages_str = self.message_to_str()
-        part1 = "I want you to act as a spoken English teacher and improver. \
-                   Here is an English conversation involving two people, an assistant and a user."
-        part2 = ("Please assess the user's oral English expression in this dialogue, and I am the user.\
-                    considering aspects such as grammar, vocabulary, fluency, authenticity, and more.\
-                    And don't forget to correct my grammar mistakes, typos, and factual errors.\
-                    Additionally, provide some suggestions for improving my oral English expression.\
-                    Please limit your reply to 150 words or less.")
-
+        part1 = ("I want you to act as a spoken English teacher and improver. "
+                 "Here is an English conversation involving two people, an assistant and a user.")
+        part2 = ("Please assess the user's oral English expression in this dialogue, and I am the user."
+                 "considering aspects such as grammar, vocabulary, fluency, authenticity, and more."
+                 "And don't forget to correct my grammar mistakes, typos, and factual errors."
+                 "Additionally, provide some suggestions for improving my oral English expression."
+                 "Please limit your reply to 150 words or less.")
         request = part1 + messages_str + part2
         final_message = [{"role": "user", "content": request}]
 
@@ -248,9 +313,14 @@ class ChatApp(QtWidgets.QWidget):
         self.update_chat_display("Evaluation", evaluation.choices[0].message.content)
         text_to_speech(evaluation.choices[0].message.content)
         self.start_button.setEnabled(True)
+        self.exit_button.setEnabled(False)  # 禁用exit_button
 
     def update_chat_display(self, role, content):
         self.chat_display.append(f"{role}: {content}")
+
+    def end_conversation(self):
+        self.running = False  # 设置对话循环标志为False
+        self.exit_button.setEnabled(False)
 
 
 if __name__ == "__main__":

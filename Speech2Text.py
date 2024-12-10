@@ -23,12 +23,13 @@ def speech_to_text():
         print(f"无法打开音频流: {e}")
         return None
 
-    print("请按下 'S键' 开始说话，并在完成时再次按下 'Q键' 停止录音。")
-    keyboard.wait('s')
-    print("正在录音...")
+    # print("请按下 'S键' 开始说话，并在完成时再次按下 'Q键' 停止录音。")
+    # keyboard.wait('s')
+    # print("正在录音...")
 
     frames = []
 
+    print("正在录音")
     try:
         # 录音过程
         while True:
@@ -45,6 +46,7 @@ def speech_to_text():
         stream.stop_stream()
         stream.close()
         audio.terminate()
+
 
     # 保存录音
     try:
@@ -67,7 +69,7 @@ def speech_to_text():
         return text
     except sr.UnknownValueError:
         print("无法识别语音")
-        return None
+        return ""
     except sr.RequestError as e:
         print(f"无法连接到Google API，错误原因：{e}")
         return None
