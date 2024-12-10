@@ -1,7 +1,8 @@
 from openai import OpenAI
 import io
-from pydub import AudioSegment
-from pydub.playback import play
+import sounddevice as sd
+import soundfile as sf
+import threading
 
 client = OpenAI(
     api_key="sk-U3LZPkBCFeLfqcartTW0UDpw9g9BT14myDBtlQN9lzkdGRag",
@@ -9,29 +10,36 @@ client = OpenAI(
 )
 
 
+def play_audio(audio_data):
+    try:
+        # 从内存缓冲区读取音频数据
+        with io.BytesIO(audio_data) as audio_buf:
+            # 读取音频文件
+            data, samplerate = sf.read(audio_buf)
+            # 播放音频
+            sd.play(data, samplerate)
+            # 等待音频播放完成
+            sd.wait()
+    except Exception as e:
+        print(f"Error playing audio: {e}")
+
+
 def text_to_speech(text):
     try:
-        # print("正在调用 OpenAI TTS API 生成语音...")
-
         # 调用 OpenAI TTS API
         response = client.audio.speech.create(
-            model="tts-1",  # 使用 OpenAI 提供的 TTS 模型
-            voice="shimmer",  # 选择语音风格，可根据需要调整
-            input=text  # 输入的文本内容
+            model="tts-1",
+            voice="shimmer",
+            input=text
         )
 
-        # 将生成的音频加载到 BytesIO 对象中
-        audio_data = io.BytesIO(response.content)
+        # 在新线程中播放音频
+        thread = threading.Thread(target=play_audio, args=(response.content,))
+        thread.daemon = True
+        thread.start()
 
-        # 使用 pydub 播放音频
-        # print("正在播放生成的语音...")
-        audio_segment = AudioSegment.from_file(audio_data, format="mp3")
-
-        play(audio_segment)
-
-        # print("播放完成！")
     except Exception as e:
-        print(f"调用 OpenAI TTS API 时发生错误: {e}")
+        print(f"Error in text_to_speech: {e}")
 
 
 if __name__ == '__main__':
