@@ -26,6 +26,7 @@ def text_to_speech(text):
         # 使用 pydub 播放音频
         # print("正在播放生成的语音...")
         audio_segment = AudioSegment.from_file(audio_data, format="mp3")
+
         play(audio_segment)
 
         # print("播放完成！")

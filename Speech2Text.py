@@ -29,8 +29,7 @@ def speech_to_text():
         print(f"无法打开音频流: {e}")
         return None
 
-    print("请按下 'S键' 开始说话，并在完成时再次按下 'Q键' 停止录音。")
-    keyboard.wait('s')
+
     print("正在录音...")
 
     frames = []
@@ -70,6 +69,7 @@ def speech_to_text():
             response = client.audio.transcriptions.create(
                 model="whisper-1",  # 使用 OpenAI 提供的 Whisper 模型
                 file=audio_file,
+                language="en"
             )
         return response.text
     except Exception as e:
