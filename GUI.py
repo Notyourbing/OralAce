@@ -9,8 +9,13 @@ from Speech2Text import speech_to_text
 import threading
 from qfluentwidgets import ComboBox
 import random
+from openai import OpenAI
 
-openai.api_key = "sk-proj-UJomPMNYs592LOa7HhU0T3BlbkFJG4LSECNT5VsFCKJFc1jp"
+client = OpenAI(
+    api_key="sk-Jqjsjxuap8LEKcROc7iTbiZ2B93Vs9bNdrAMw8u3dyxltimg",
+    base_url="https://api.chatanywhere.tech/v1"
+)
+
 scene_set = ["Daily life", "Shopping", "Education", "Social life", "Traveling abroad"]
 scene_dl = ["ordeing in a cantee", "tidying the house", "hailing a taxi", "asking for the way"]
 scene_sh = ["shopping at a sports shop", "buying some fruits", "asking for after-sales service"]
@@ -152,8 +157,8 @@ class ChatApp(QtWidgets.QWidget):
 
     def create_reply(self, user_input):
         self.messages.append({"role": "user", "content": user_input})
-        completion = openai.chat.completions.create(
-            model="gpt-3.5-turbo",
+        completion = client.chat.completions.create(
+            model="gpt-4o-mini",
             messages=self.messages,
             max_tokens=100,
         )
@@ -199,11 +204,11 @@ class ChatApp(QtWidgets.QWidget):
                   f"Just start the practicing without expressing your happiness to help me"
                   f"Please input your question without saying 'sure': ")
         self.messages = [
-            {"role": "system", "content": prompt},
+            {"role": "system", "content": prompt}
         ]
         # self.update_chat_display("System", prompt)
-        completion = openai.chat.completions.create(
-            model="gpt-3.5-turbo",
+        completion = client.chat.completions.create(
+            model="gpt-4o-mini",
             messages=self.messages,
             max_tokens=100,
         )
@@ -233,17 +238,15 @@ class ChatApp(QtWidgets.QWidget):
                     Please limit your reply to 150 words or less.")
 
         request = part1 + messages_str + part2
+        final_message = [{"role": "user", "content": request}]
 
-        evaluation = openai.completions.create(
-            model="gpt-3.5-turbo-instruct",
-            prompt=request,
+        evaluation = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=final_message,
             max_tokens=500,
-            n=1,
-            stop=None,
-            temperature=1,
         )
-        self.update_chat_display("Evaluation", evaluation.choices[0].text)
-        text_to_speech(evaluation.choices[0].text)
+        self.update_chat_display("Evaluation", evaluation.choices[0].message.content)
+        text_to_speech(evaluation.choices[0].message.content)
         self.start_button.setEnabled(True)
 
     def update_chat_display(self, role, content):
