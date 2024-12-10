@@ -6,4 +6,5 @@ PyQt5_sip==12.13.0
 PyQt-Fluent-Widgets==1.5.7
 pyttsx3==2.90
 SpeechRecognition==3.10.4
-pydub~=0.25.1
+sounddevice~=0.5.1
+soundfile~=0.12.1

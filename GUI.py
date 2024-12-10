@@ -1,5 +1,5 @@
 import sys
-import openai
+import os
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtWidgets import QPushButton
 from PyQt5.QtGui import QIcon, QPalette, QBrush, QPixmap, QPainter, QColor
@@ -25,6 +25,16 @@ scene_social_life = ["making a new friend", "planning a trip with friends"]
 scene_traveling_abroad = ["booking a hotel", "checking in at the airport"]
 
 
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+
 class ChatApp(QtWidgets.QWidget):
     recording_control = False
     def __init__(self):
@@ -38,7 +48,7 @@ class ChatApp(QtWidgets.QWidget):
 
         # 设置背景
         palette = QPalette()
-        pixmap = QPixmap('image/background.jpg').scaled(2700, 1600)
+        pixmap = QPixmap(resource_path('image/background.jpg')).scaled(2700, 1600)
         transparent_pixmap = QPixmap(pixmap.size())
         transparent_pixmap.fill(QColor(255, 255, 255, 255))
         painter = QPainter(transparent_pixmap)
@@ -50,7 +60,7 @@ class ChatApp(QtWidgets.QWidget):
         self.setPalette(palette)
 
         # 设置icon
-        icon = QtGui.QIcon("image/icon.png")
+        icon = QtGui.QIcon(resource_path("image/icon.png"))
         self.setWindowIcon(icon)
 
         # 设置背景色和默认字体颜色
@@ -107,7 +117,7 @@ class ChatApp(QtWidgets.QWidget):
 
         # 添加图片
         self.picture_button = QPushButton(self)
-        self.picture_button.setIcon(QIcon(QPixmap('image/q_m.jpg')))
+        self.picture_button.setIcon(QIcon(QPixmap(resource_path('image/q_m.jpg'))))
         self.picture_button.setIconSize(QSize(450, 275))
         self.picture_button.setFixedSize(450, 275)
         self.scene_vlayout.addWidget(self.picture_button, alignment=QtCore.Qt.AlignCenter)
@@ -118,7 +128,7 @@ class ChatApp(QtWidgets.QWidget):
         # Start Practice按钮
         self.start_button = QtWidgets.QPushButton("Start Practice")
         self.start_button.setFont(QtGui.QFont("Georgia", 16, QtGui.QFont.Bold))
-        self.start_button.setIcon(QIcon(QPixmap('image/play.png')))
+        self.start_button.setIcon(QIcon(QPixmap(resource_path('image/play.png'))))
         self.start_button.setIconSize(QSize(30, 30))
         self.start_button.setStyleSheet("""
             QPushButton {
@@ -167,7 +177,7 @@ class ChatApp(QtWidgets.QWidget):
         # 退出对话按钮
         self.exit_button = self.exit_button = QtWidgets.QPushButton("End Conversation")
         self.exit_button.setFont(QtGui.QFont("Georgia", 16, QtGui.QFont.Bold))
-        self.exit_button.setIcon(QIcon(QPixmap('image/exit.png')))
+        self.exit_button.setIcon(QIcon(QPixmap(resource_path('image/exit.png'))))
         self.exit_button.setIconSize(QSize(30, 30))
         self.exit_button.setStyleSheet("""
             QPushButton {
@@ -225,7 +235,7 @@ class ChatApp(QtWidgets.QWidget):
             }
         """)
         self.quit_button.setFixedSize(40, 40)  # 按钮大小与图片大小一致
-        self.quit_button.setIcon(QIcon("image/close_button.png"))  # 设置图片为按钮图标
+        self.quit_button.setIcon(QIcon(resource_path("image/close_button.png")))  # 设置图片为按钮图标
         self.quit_button.setIconSize(QSize(40, 40))  # 图标大小等于按钮大小
         self.quit_button.clicked.connect(self.close)  # 点击按钮退出程序
 
@@ -262,25 +272,25 @@ class ChatApp(QtWidgets.QWidget):
         self.exit_button.setEnabled(True)
         c_scene_set = self.scene_combobox.currentText()
         if (c_scene_set == "Daily life"):
-            self.picture_button.setIcon(QIcon(QPixmap('image/dl.jpg')))
+            self.picture_button.setIcon(QIcon(QPixmap(resource_path('image/dl.jpg'))))
             self.picture_button.setIconSize(QSize(450, 275))
-            scene=random.choice(scene_daily_life)
+            scene = random.choice(scene_daily_life)
         elif (c_scene_set == "Shopping"):
-            self.picture_button.setIcon(QIcon(QPixmap('image/sh.jpg')))
+            self.picture_button.setIcon(QIcon(QPixmap(resource_path(('image/sh.jpg')))))
             self.picture_button.setIconSize(QSize(450, 275))
-            scene=random.choice(scene_shopping)
+            scene = random.choice(scene_shopping)
         elif (c_scene_set == "Education"):
-            self.picture_button.setIcon(QIcon(QPixmap('image/ed.jpg')))
+            self.picture_button.setIcon(QIcon(QPixmap(resource_path('image/ed.jpg'))))
             self.picture_button.setIconSize(QSize(450, 275))
-            scene=random.choice(scene_education)
+            scene = random.choice(scene_education)
         elif (c_scene_set == 'Social life'):
-            self.picture_button.setIcon(QIcon(QPixmap('image/sl.jpg')))
+            self.picture_button.setIcon(QIcon(QPixmap(resource_path('image/sl.jpg'))))
             self.picture_button.setIconSize(QSize(450, 275))
-            scene=random.choice(scene_social_life)
+            scene = random.choice(scene_social_life)
         elif (c_scene_set == 'Traveling abroad'):
-            self.picture_button.setIcon(QIcon(QPixmap('image/ta.jpg')))
+            self.picture_button.setIcon(QIcon(QPixmap(resource_path(('image/ta.jpg')))))
             self.picture_button.setIconSize(QSize(450, 275))
-            scene=random.choice(scene_traveling_abroad)
+            scene = random.choice(scene_traveling_abroad)
 
         self.chat_display.append(f"Scene:{scene}")
 
@@ -320,7 +330,6 @@ class ChatApp(QtWidgets.QWidget):
             reply = self.create_reply(user_input)
             text_to_speech(reply)
             self.update_chat_display("Partner", reply)
-
 
         messages_str = self.message_to_str()
         part1 = ("I want you to act as a spoken English teacher and improver. "
