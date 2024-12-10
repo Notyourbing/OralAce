@@ -1,7 +1,13 @@
 import pyaudio
 import wave
-import speech_recognition as sr
 import keyboard
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="sk-U3LZPkBCFeLfqcartTW0UDpw9g9BT14myDBtlQN9lzkdGRag",
+    base_url="https://api.chatanywhere.tech/v1"
+)
+
 
 def speech_to_text():
     # 音频配置
@@ -9,16 +15,16 @@ def speech_to_text():
     CHANNELS = 1
     RATE = 16000
     CHUNK = 1024
-    WAVE_OUTPUT_FILENAME = "output.wav"
+    WAVE_OUTPUT_FILENAME = "audio/output.wav"
 
-    # 创建PyAudio对象
+    # 创建 PyAudio 对象
     audio = pyaudio.PyAudio()
 
     try:
         # 开始录音
         stream = audio.open(format=FORMAT, channels=CHANNELS,
-                        rate=RATE, input=True,
-                        frames_per_buffer=CHUNK)
+                            rate=RATE, input=True,
+                            frames_per_buffer=CHUNK)
     except OSError as e:
         print(f"无法打开音频流: {e}")
         return None
@@ -46,7 +52,7 @@ def speech_to_text():
         stream.close()
         audio.terminate()
 
-    # 保存录音
+        # 保存录音
     try:
         with wave.open(WAVE_OUTPUT_FILENAME, 'wb') as wf:
             wf.setnchannels(CHANNELS)
@@ -57,20 +63,20 @@ def speech_to_text():
         print(f"保存录音文件错误: {e}")
         return None
 
-    # 使用 SpeechRecognition 进行语音识别
-    r = sr.Recognizer()
+        # 调用 OpenAI Whisper API 进行语音识别
     try:
-        with sr.AudioFile(WAVE_OUTPUT_FILENAME) as source:
-            audio = r.record(source)
-        # 转换语音为文本
-        text = r.recognize_google(audio, language='en-US')
-        return text
-    except sr.UnknownValueError:
-        print("无法识别语音")
+        # print("正在调用 OpenAI Whisper API 进行语音转录...")
+        with open(WAVE_OUTPUT_FILENAME, "rb") as audio_file:
+            response = client.audio.transcriptions.create(
+                model="whisper-1",  # 使用 OpenAI 提供的 Whisper 模型
+                file=audio_file,
+            )
+        return response.text
+    except Exception as e:
+        print(f"调用 OpenAI API 时发生错误: {e}")
         return None
-    except sr.RequestError as e:
-        print(f"无法连接到Google API，错误原因：{e}")
-        return None
+
+
 if __name__ == "__main__":
     # 使用示例
     transcribed_text = speech_to_text()

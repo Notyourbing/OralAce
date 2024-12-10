@@ -1,8 +1,9 @@
 keyboard==0.13.5
 openai==1.30.2
 PyAudio==0.2.14
-PyQt5==5.15.10
+PyQt5~=5.15.11
 PyQt5_sip==12.13.0
 PyQt-Fluent-Widgets==1.5.7
 pyttsx3==2.90
 SpeechRecognition==3.10.4
+pydub~=0.25.1
