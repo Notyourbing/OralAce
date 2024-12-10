@@ -9,7 +9,7 @@ client = OpenAI(
 )
 
 
-def speech_to_text():
+def speech_to_text(chatApp):
     # 音频配置
     FORMAT = pyaudio.paInt16
     CHANNELS = 1
@@ -39,7 +39,7 @@ def speech_to_text():
         while True:
             data = stream.read(CHUNK, exception_on_overflow=False)
             frames.append(data)
-            if keyboard.is_pressed('q'):
+            if not chatApp.recording_control:
                 print("录音结束")
                 break
     except OSError as e:

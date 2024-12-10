@@ -26,6 +26,7 @@ scene_traveling_abroad = ["booking a hotel", "checking in at the airport"]
 
 
 class ChatApp(QtWidgets.QWidget):
+    recording_control = False
     def __init__(self):
         super().__init__()
         self.initUI()
@@ -135,6 +136,33 @@ class ChatApp(QtWidgets.QWidget):
         self.start_button.setFixedSize(280, 60)
         self.start_button.clicked.connect(self.start_practice)
         self.scene_vlayout.addWidget(self.start_button, alignment=QtCore.Qt.AlignCenter)
+
+        # Record button
+        self.record_button = QtWidgets.QPushButton("Start Recording")
+        self.record_button.setCheckable(True)  # Make it a toggle button
+        self.record_button.setFont(QtGui.QFont("Georgia", 16, QtGui.QFont.Bold))
+        # self.record_button.setIcon(QIcon(QPixmap('image/record.png')))  # Optional: set a record icon
+        self.record_button.setIconSize(QSize(30, 30))
+        self.record_button.setStyleSheet("""
+                    QPushButton {
+                        background-color: #2ecc71;
+                        color: #FFFFFF;
+                        border-radius: 20px;
+                    }
+                    QPushButton:checked {
+                        background-color: #e67e22;
+                    }
+                    QPushButton:hover {
+                        background-color: #27ae60;
+                    }
+                    QPushButton:pressed {
+                        background-color: #1e8449;
+                    }
+                """)
+        self.record_button.setFixedSize(280, 60)
+        self.record_button.clicked.connect(self.toggle_recording)
+        self.record_button.setEnabled(False)  # Initially disabled
+        self.scene_vlayout.addWidget(self.record_button, alignment=QtCore.Qt.AlignCenter)
 
         # 退出对话按钮
         self.exit_button = self.exit_button = QtWidgets.QPushButton("End Conversation")
@@ -276,13 +304,13 @@ class ChatApp(QtWidgets.QWidget):
         self.messages.append({"role": "assistant", "content": response})
         self.update_chat_display("Partner", response)
         text_to_speech(response)
-
+        self.record_button.setEnabled(True)
         self.running = True  # 控制对话循环
         while self.running:
-            print("请按下 'S键' 开始说话，并在完成时再次按下 'Q键' 停止录音。")
+            print("请按下绿色按钮")
             while self.running:
-                if keyboard.is_pressed('s'):
-                    user_input = speech_to_text()
+                if self.recording_control:
+                    user_input = speech_to_text(self)
                     break
             if not self.running:  # 检查是否已终止对话
                 break
@@ -301,7 +329,8 @@ class ChatApp(QtWidgets.QWidget):
                  "considering aspects such as grammar, vocabulary, fluency, authenticity, and more."
                  "And don't forget to correct my grammar mistakes, typos, and factual errors."
                  "Additionally, provide some suggestions for improving my oral English expression."
-                 "Please limit your reply to 150 words or less.")
+                 "Please limit your reply to 150 words or less."
+                 "Keep your answers out of bold font")
         request = part1 + messages_str + part2
         final_message = [{"role": "user", "content": request}]
 
@@ -319,8 +348,24 @@ class ChatApp(QtWidgets.QWidget):
         self.chat_display.append(f"{role}: {content}")
 
     def end_conversation(self):
-        self.running = False  # 设置对话循环标志为False
+        self.running = False  # Set the conversation loop flag to False
+        self.recording_control = False  # Reset recording flag
+        self.record_button.setChecked(False)
+        self.record_button.setText("Evaluating...")
+        self.record_button.setEnabled(False)
         self.exit_button.setEnabled(False)
+        self.start_button.setEnabled(True)
+
+    def toggle_recording(self):
+        if self.record_button.isChecked():
+            # Start Recording
+            self.record_button.setText("Stop Recording")
+            self.recording_control = True
+            # Optionally, provide visual feedback
+        else:
+            # Stop Recording
+            self.record_button.setText("Start Recording")
+            self.recording_control = False
 
 
 if __name__ == "__main__":
