@@ -1,3 +1,5 @@
-.idea/
-__pycache__/
+/.idea
+/__pycache__
 *.wav
+/build
+/dist
