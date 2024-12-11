@@ -20,7 +20,7 @@ a = Analysis(
     noarchive=False,
 )
 
-pyz = PYZ(a.pure)
+pyz = PYZ(a.pure, optimize=2)
 
 exe = EXE(
     pyz,
@@ -28,14 +28,14 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='GUI',
+    name='OralAce',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=True,
+    console=False,
     icon='image/icon.ico',
     disable_windowed_traceback=False,
     argv_emulation=False,

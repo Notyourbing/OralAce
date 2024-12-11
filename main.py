@@ -14,16 +14,16 @@ from Speech2Text import speech_to_text
 from Text2Speech import text_to_speech
 
 client = OpenAI(
-    api_key="sk-Jqjsjxuap8LEKcROc7iTbiZ2B93Vs9bNdrAMw8u3dyxltimg",
+    api_key="sk-U3LZPkBCFeLfqcartTW0UDpw9g9BT14myDBtlQN9lzkdGRag",
     base_url="https://api.chatanywhere.tech/v1"
 )
 
 scene_set = ["Daily life", "Shopping", "Education", "Social life", "Traveling abroad"]
-scene_daily_life = ["ordeing in a cantee", "tidying the house", "hailing a taxi", "asking for the way"]
-scene_shopping = ["shopping at a sports shop", "buying some fruits", "asking for after-sales service"]
-scene_education = ["talking about tommorrow's math test", "asking information for your offers"]
-scene_social_life = ["making a new friend", "planning a trip with friends"]
-scene_traveling_abroad = ["booking a hotel", "checking in at the airport"]
+scene_daily_life = ["Ordering in a Canteen", "Tidying the House", "Hailing a Taxi", "Asking for the Way"]
+scene_shopping = ["Shopping at a Sports Shop", "Buying Some Fruits", "Asking for After-Sales Service"]
+scene_education = ["Talking About Tomorrow's Math Test", "Asking for Information on Your Offers"]
+scene_social_life = ["Making a New Friend", "Planning a Trip with Friends"]
+scene_traveling_abroad = ["Booking a Hotel", "Checking in at the Airport"]
 
 
 def resource_path(relative_path):
