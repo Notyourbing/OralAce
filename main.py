@@ -1,16 +1,17 @@
-import sys
 import os
-from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtWidgets import QPushButton
-from PyQt5.QtGui import QIcon, QPalette, QBrush, QPixmap, QPainter, QColor
-from PyQt5.QtCore import QSize
-from Text2Speech import text_to_speech
-from Speech2Text import speech_to_text
-import threading
-from qfluentwidgets import ComboBox
 import random
+import sys
+import threading
+
+from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt5.QtCore import QSize
+from PyQt5.QtGui import QIcon, QPalette, QBrush, QPixmap, QPainter, QColor
+from PyQt5.QtWidgets import QPushButton
 from openai import OpenAI
-import keyboard
+from qfluentwidgets import ComboBox
+
+from Speech2Text import speech_to_text
+from Text2Speech import text_to_speech
 
 client = OpenAI(
     api_key="sk-Jqjsjxuap8LEKcROc7iTbiZ2B93Vs9bNdrAMw8u3dyxltimg",
@@ -37,8 +38,21 @@ def resource_path(relative_path):
 
 class ChatApp(QtWidgets.QWidget):
     recording_control = False
+
     def __init__(self):
         super().__init__()
+        self.running = None
+        self.quit_button = None
+        self.chat_display = None
+        self.exit_button = None
+        self.record_button = None
+        self.start_button = None
+        self.picture_button = None
+        self.scene_combobox = None
+        self.instruction_label = None
+        self.scene_vlayout = None
+        self.title_label = None
+        self.layout = None
         self.initUI()
         self.messages = []
 
@@ -92,11 +106,11 @@ class ChatApp(QtWidgets.QWidget):
 
         # 指导说明标签
         instruction_text = (
-            "Instructions: Please choose a scene set to get a random scene in that set. "
-            "When you get ready, press the 'Start Practice' button at the bottom of the page. "
-            "After your AI partner begins the conversation, you can talk with her after pressing 'S' on your keyboard. "
-            "When you finish talking, you can press 'Q' on your keyboard to end and wait for your partner's response. "
-            "If you want to end this conversation, just speak the single word 'close'."
+            "Instructions:\n"
+            "1. Select a conversation scenario from the dropdown menu\n"
+            "2. Click 'Start Practice' to begin\n"
+            "3. Use the green button to start/stop recording your response\n"
+            "4. Click 'End Conversation' to finish and get your evaluation"
         )
         self.instruction_label = QtWidgets.QLabel(instruction_text)
         self.instruction_label.setWordWrap(True)
@@ -268,27 +282,28 @@ class ChatApp(QtWidgets.QWidget):
         thread.start()
 
     def run_practice(self):
+        global scene, user_input
         self.start_button.setEnabled(False)
         self.exit_button.setEnabled(True)
         c_scene_set = self.scene_combobox.currentText()
-        if (c_scene_set == "Daily life"):
+        if c_scene_set == "Daily life":
             self.picture_button.setIcon(QIcon(QPixmap(resource_path('image/dl.jpg'))))
             self.picture_button.setIconSize(QSize(450, 275))
             scene = random.choice(scene_daily_life)
-        elif (c_scene_set == "Shopping"):
-            self.picture_button.setIcon(QIcon(QPixmap(resource_path(('image/sh.jpg')))))
+        elif c_scene_set == "Shopping":
+            self.picture_button.setIcon(QIcon(QPixmap(resource_path('image/sh.jpg'))))
             self.picture_button.setIconSize(QSize(450, 275))
             scene = random.choice(scene_shopping)
-        elif (c_scene_set == "Education"):
+        elif c_scene_set == "Education":
             self.picture_button.setIcon(QIcon(QPixmap(resource_path('image/ed.jpg'))))
             self.picture_button.setIconSize(QSize(450, 275))
             scene = random.choice(scene_education)
-        elif (c_scene_set == 'Social life'):
+        elif c_scene_set == 'Social life':
             self.picture_button.setIcon(QIcon(QPixmap(resource_path('image/sl.jpg'))))
             self.picture_button.setIconSize(QSize(450, 275))
             scene = random.choice(scene_social_life)
-        elif (c_scene_set == 'Traveling abroad'):
-            self.picture_button.setIcon(QIcon(QPixmap(resource_path(('image/ta.jpg')))))
+        elif c_scene_set == 'Traveling abroad':
+            self.picture_button.setIcon(QIcon(QPixmap(resource_path('image/ta.jpg'))))
             self.picture_button.setIconSize(QSize(450, 275))
             scene = random.choice(scene_traveling_abroad)
 
@@ -312,8 +327,8 @@ class ChatApp(QtWidgets.QWidget):
         )
         response = completion.choices[0].message.content
         self.messages.append({"role": "assistant", "content": response})
-        self.update_chat_display("Partner", response)
         text_to_speech(response)
+        self.update_chat_display("Partner", response)
         self.record_button.setEnabled(True)
         self.running = True  # 控制对话循环
         while self.running:
@@ -348,8 +363,8 @@ class ChatApp(QtWidgets.QWidget):
             messages=final_message,
             max_tokens=500,
         )
-        self.update_chat_display("Evaluation", evaluation.choices[0].message.content)
         text_to_speech(evaluation.choices[0].message.content)
+        self.update_chat_display("Evaluation", evaluation.choices[0].message.content)
         self.start_button.setEnabled(True)
         self.exit_button.setEnabled(False)  # 禁用exit_button
 

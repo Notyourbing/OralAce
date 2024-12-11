@@ -3,6 +3,7 @@ import io
 import sounddevice as sd
 import soundfile as sf
 import threading
+import numpy as np
 
 client = OpenAI(
     api_key="sk-U3LZPkBCFeLfqcartTW0UDpw9g9BT14myDBtlQN9lzkdGRag",
@@ -16,6 +17,7 @@ def play_audio(audio_data):
         with io.BytesIO(audio_data) as audio_buf:
             # 读取音频文件
             data, samplerate = sf.read(audio_buf)
+            data = data.astype(np.float32)
             # 播放音频
             sd.play(data, samplerate)
             # 等待音频播放完成

@@ -1,6 +1,7 @@
-import pyaudio
 import wave
-import keyboard
+
+import pyaudio
+import io
 from openai import OpenAI
 
 client = OpenAI(
@@ -15,7 +16,6 @@ def speech_to_text(chatApp):
     CHANNELS = 1
     RATE = 16000
     CHUNK = 1024
-    WAVE_OUTPUT_FILENAME = "audio/output.wav"
 
     # 创建 PyAudio 对象
     audio = pyaudio.PyAudio()
@@ -29,9 +29,7 @@ def speech_to_text(chatApp):
         print(f"无法打开音频流: {e}")
         return None
 
-
     print("正在录音...")
-
     frames = []
 
     try:
@@ -51,34 +49,27 @@ def speech_to_text(chatApp):
         stream.close()
         audio.terminate()
 
-        # 保存录音
     try:
-        with wave.open(WAVE_OUTPUT_FILENAME, 'wb') as wf:
+        # 创建内存中的WAV文件
+        wav_buffer = io.BytesIO()
+        with wave.Wave_write(wav_buffer) as wf:
             wf.setnchannels(CHANNELS)
             wf.setsampwidth(audio.get_sample_size(FORMAT))
             wf.setframerate(RATE)
             wf.writeframes(b''.join(frames))
-    except OSError as e:
-        print(f"保存录音文件错误: {e}")
-        return None
 
-        # 调用 OpenAI Whisper API 进行语音识别
-    try:
-        # print("正在调用 OpenAI Whisper API 进行语音转录...")
-        with open(WAVE_OUTPUT_FILENAME, "rb") as audio_file:
-            response = client.audio.transcriptions.create(
-                model="whisper-1",  # 使用 OpenAI 提供的 Whisper 模型
-                file=audio_file,
-                language="en"
-            )
+            # 将指针移到开始位置
+        wav_buffer.seek(0)
+
+        # 直接使用内存中的数据调用 Whisper API
+        response = client.audio.transcriptions.create(
+            model="whisper-1",
+            file=("audio.wav", wav_buffer),  # 传递文件名和内存中的数据
+            language="en"
+        )
         return response.text
     except Exception as e:
-        print(f"调用 OpenAI API 时发生错误: {e}")
+        print(f"处理音频或调用API时发生错误: {e}")
         return None
 
 
-if __name__ == "__main__":
-    # 使用示例
-    transcribed_text = speech_to_text()
-    if transcribed_text:
-        print("转换的文本:", transcribed_text)
