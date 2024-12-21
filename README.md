@@ -11,7 +11,7 @@
 pip install -r requirements.txt
 ```
 
-然后运行`GUI.py`（需要在支持GPT的网络环境下运行）：
+然后运行`main.py`：
 ```
-python GUI.py
+python main.py
 ```
